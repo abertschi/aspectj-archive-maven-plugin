@@ -2,6 +2,10 @@ package ch.abertschi.aspectj;
 
 import java.io.File;
 
+/**
+ * @author Andrin Bertsch
+ * @since 2015-05
+ */
 public class Utils {
 
     private Utils() {

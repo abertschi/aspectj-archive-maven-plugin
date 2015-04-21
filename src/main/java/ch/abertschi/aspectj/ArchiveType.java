@@ -1,7 +1,8 @@
 package ch.abertschi.aspectj;
 
 /**
- * @author Andrin Bertschi
+ * @author Andrin Bertsch
+ * @since 2015-05
  */
 public enum ArchiveType {
     EAR,

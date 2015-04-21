@@ -6,6 +6,12 @@ import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.mojo.aspectj.Module;
 
+/**
+ * Supported flags for the AspectJ Mojo.
+ *
+ * @author Andrin Bertsch
+ * @since 2015-05
+ */
 public interface AjConfigurable {
 
     String getAjMojoVersion();
