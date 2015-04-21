@@ -18,9 +18,9 @@ Add the artifact below to your plugin section.
 ```
 
 ## Goal archive-weave
-The goal `archive-weave` imports an existing { EAR | WAR }
+The goal `archive-weave` imports an existing EAR or WAR
 and applies compile-time-weaving on every specified `weaveDependency`
-using the given `aspectLibraries`. The output is a new { EAR | WAR }
+using the given `aspectLibraries`. The output is a new archive
 containing the specified weaveDependencies replaced by their new compile-time-weaved equivalents.
 
 ```xml
@@ -57,9 +57,7 @@ containing the specified weaveDependencies replaced by their new compile-time-we
 ```
 
 ### Configuration
-
-Configurations that are not listed here are delegates 
-For those configurations that are not listed here shall the plugin documentation of
+For configurations that are not listed here shall the plugin documentation of
 the `aspecj-maven-plugin` by `org.codehaus.mojo` be considered.
 
 #### archiveImport
