@@ -21,7 +21,7 @@ Add the artifact below to your plugin section.
 The goal `archive-weave` imports an existing EAR or WAR
 and applies compile-time-weaving on every specified `weaveDependency`
 using the given `aspectLibraries`. The output is a new archive
-containing the weaveDependencies replaced by their new compile-time-weaved equivalents.
+containing the `weaveDependencies` replaced by their new compile-time-weaved equivalents.
 
 ```xml
 <plugin>
