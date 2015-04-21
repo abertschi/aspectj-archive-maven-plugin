@@ -6,14 +6,14 @@
 
     <groupId>ch.abertschi.aspectj</groupId>
     <artifactId>aspectj-archive-maven-plugin-test</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.0.1-SNAPSHOT</version>
 
     <build>
         <plugins>
             <plugin>
                 <groupId>ch.abertschi</groupId>
                 <artifactId>aspectj-archive-maven-plugin</artifactId>
-                <version>1.0-SNAPSHOT</version>
+                <version>0.0.1-SNAPSHOT</version>
                 <executions>
                     <execution>
                         <phase>install</phase>
@@ -23,11 +23,6 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <importArchive>test</importArchive>
-                    <aspectLibraries>
-                        <aspectLibrary>
-                        </aspectLibrary>
-                    </aspectLibraries>
                 </configuration>
             </plugin>
         </plugins>
