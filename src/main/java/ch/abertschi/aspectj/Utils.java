@@ -1,5 +1,9 @@
 package ch.abertschi.aspectj;
+import org.jboss.shrinkwrap.api.ArchivePath;
+import org.jboss.shrinkwrap.api.Node;
+
 import java.io.File;
+import java.util.Map;
 
 public class Utils {
 
@@ -20,4 +24,24 @@ public class Utils {
 		}
 		return archiveFile;
 	}
+
+    public static String getPathWithoutFilename(String path) {
+        int index = path.lastIndexOf("/");
+        if (index == 0) {
+            return "/";
+        } else {
+            return path.substring(0, index);
+        }
+    }
+
+    public static String getFilename(String path) {
+        String result;
+        String[] split = path.split("/");
+        if (split.length > 1) {
+            result = split[split.length - 1];
+        } else {
+            result = split[0];
+        }
+        return result;
+    }
 }

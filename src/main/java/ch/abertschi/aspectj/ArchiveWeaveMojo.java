@@ -48,13 +48,6 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable {
 	@Component
 	private BuildPluginManager pluginManager;
 
-	protected enum FileExtension {
-		EAR,
-		WAR,
-		JAR,
-		UNKNOWN
-	}
-
 	//-------------------------------------------------------------------------------------||
 	// mojo configuration -----------------------------------------------------------------||
 	//-------------------------------------------------------------------------------------||
@@ -148,15 +141,15 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable {
 		getLog().info("Started goal archive-weave ...");
 
 		File importArchiveFile = Utils.getFile(basedir, archiveImport);
-		String archiveName = extractFilename(archiveImport);
-		FileExtension ext = getFileExtension(archiveName);
+		String archiveName = Utils.getFilename(archiveImport);
+        ArchiveType ext = ArchiveType.getExtensionFromName(archiveName);
 
 		failIfNotSupportedExtension(ext);
 
 		LibraryContainer<? extends Archive<?>> weaveArchive;
 		getLog().info("Importing base artifact [" + archiveName + "] from [" + importArchiveFile.getAbsolutePath() + "]");
 
-		if (ext == FileExtension.EAR) {
+		if (ext == ArchiveType.EAR) {
 			weaveArchive = importArchive(EnterpriseArchive.class, importArchiveFile, archiveName);
 		} else {
 			weaveArchive = importArchive(WebArchive.class, importArchiveFile, archiveName);
@@ -211,8 +204,7 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable {
 		try {
 			/*
 			 * To simplify dependency management, we import
-			 * all dependencies of the test maven module (compile + test), 
-			 * even if all arquillian jars are imported as well. 
+			 * all dependencies of the test maven module (compile + test),
 			 * That makes dependency management much simpler.
 			 */
 			jars = Arrays.asList(Maven
@@ -242,7 +234,7 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable {
 
 		List<JavaArchive> recompiledJars = new ArrayList<JavaArchive>();
 		for (Module toWeave : weaveDependencies) {
-			getLog().info("Recompiling library [" + toWeave.getGroupId() + ":" + toWeave.getArtifactId() + "] using " + aspectLibraries);
+			getLog().info("Recompiling library [" + toWeave.getGroupId() + ":" + toWeave.getArtifactId() );
 
 			recompiledJars.add(compiler.recompile(toWeave, aspectLibraries));
 		}
@@ -254,8 +246,8 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable {
 		Map<ArchivePath, Node> archiveContent = archive.getContent();
 
 		for (Entry<ArchivePath, Node> entry : archiveContent.entrySet()) {
-			String artifactName = extractFilename(entry.getKey().get());
-			if (FileExtension.JAR == getFileExtension(artifactName)) {
+			String artifactName = Utils.getFilename(entry.getKey().get());
+			if (ArchiveType.JAR == ArchiveType.getExtensionFromName(artifactName)) {
 				getLog().debug("Adding jar [" + artifactName + "]");
 
 				for (JavaArchive recompiled : newJars) {
@@ -263,7 +255,7 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable {
 						getLog().info("Replacing jar [" + entry.getKey().get() + "] with recompiled jar ");
 
 						newArchive.delete(entry.getKey());
-						String withoutFilename = pathWithoutFilename(entry);
+						String withoutFilename = Utils.getPathWithoutFilename(entry.getKey().get());
 						newArchive.add(recompiled, withoutFilename, ZipExporter.class);
 					}
 				}
@@ -272,48 +264,15 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable {
 		return newArchive;
 	}
 
-	protected void failIfNotSupportedExtension(FileExtension ext) throws MojoExecutionException {
-		if (ext == FileExtension.UNKNOWN) {
-			throw new MojoExecutionException("Not recognised file extension in " + archiveImport);
-		}
-	}
-
 	//-------------------------------------------------------------------------------------||
 	// helper section ---------------------------------------------------------------------||
 	//-------------------------------------------------------------------------------------||
 
-	private String pathWithoutFilename(Entry<ArchivePath, Node> entry) {
-		final String entryPath = entry.getKey().get();
-		int index = entryPath.lastIndexOf("/");
-		if (index == 0) {
-			return "/";
-		} else {
-			return entryPath.substring(0, index);
-		}
-	}
-
-	private String extractFilename(String path) {
-		String result;
-		String[] split = path.split("/");
-		if (split.length > 1) {
-			result = split[split.length - 1];
-		} else {
-			result = split[0];
-		}
-		return result;
-	}
-
-	private FileExtension getFileExtension(String name) {
-		FileExtension ext = FileExtension.UNKNOWN;
-		if (name.toLowerCase().endsWith(".ear")) {
-			ext = FileExtension.EAR;
-		} else if (name.toLowerCase().endsWith(".war")) {
-			ext = FileExtension.WAR;
-		} else if (name.toLowerCase().endsWith(".jar")) {
-			ext = FileExtension.JAR;
-		}
-		return ext;
-	}
+    protected void failIfNotSupportedExtension(ArchiveType ext) throws MojoExecutionException {
+        if (ext == ArchiveType.UNKNOWN) {
+            throw new MojoExecutionException("Not recognised file extension in " + archiveImport);
+        }
+    }
 
 	//-------------------------------------------------------------------------------------||
 	// AjConfigurable ---------------------------------------------------------------------||

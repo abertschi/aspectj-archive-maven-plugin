@@ -71,7 +71,7 @@ public class AjCompiler {
 				    plugin(
 				    groupId("org.codehaus.mojo"),
 			        artifactId("aspectj-maven-plugin"),
-			        version("1.7")
+			        version(ajConfig.getAjMojoVersion())
 			    ),
 			    goal("compile"),
 			    configuration(
