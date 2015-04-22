@@ -12,13 +12,16 @@ public class Module
 
     private String version;
 
-    public String toString() {
+    public String toString()
+    {
         StringBuilder builder = new StringBuilder();
         builder.append(groupId).append(":").append(artifactId);
-        if (version != null) {
+        if (version != null)
+        {
             builder.append(":").append(version);
         }
-        if (type != null) {
+        if (type != null)
+        {
             builder.append(":").append(type);
         }
         return builder.toString();

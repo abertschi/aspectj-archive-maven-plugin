@@ -6,41 +6,55 @@ import java.io.File;
  * @author Andrin Bertsch
  * @since 2015-05
  */
-public class Utils {
+public class Utils
+{
 
-    private Utils() {
+    private Utils()
+    {
     }
 
-    public static void mkdirIfNotExists(String directory) {
+    public static void mkdirIfNotExists(String directory)
+    {
         File buildDir = new File(directory);
-        if (!buildDir.exists()) {
+        if (!buildDir.exists())
+        {
             buildDir.mkdir();
         }
     }
 
-    public static File getFile(File base, String suffix) {
+    public static File getFile(File base, String suffix)
+    {
         File archiveFile = new File(base, suffix);
-        if (!archiveFile.exists()) {
+        if (!archiveFile.exists())
+        {
             throw new RuntimeException("Specified deployable doesnt exist: " + base.getAbsolutePath() + " name: " + suffix);
         }
         return archiveFile;
     }
 
-    public static String getPathWithoutFilename(String path) {
+    public static String getPathWithoutFilename(String path)
+    {
         int index = path.lastIndexOf("/");
-        if (index == 0) {
+        if (index == 0)
+        {
             return "/";
-        } else {
+        }
+        else
+        {
             return path.substring(0, index);
         }
     }
 
-    public static String getFilename(String path) {
+    public static String getFilename(String path)
+    {
         String result;
         String[] split = path.split("/");
-        if (split.length > 1) {
+        if (split.length > 1)
+        {
             result = split[split.length - 1];
-        } else {
+        }
+        else
+        {
             result = split[0];
         }
         return result;

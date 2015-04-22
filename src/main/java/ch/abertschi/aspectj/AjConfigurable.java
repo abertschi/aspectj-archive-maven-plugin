@@ -11,8 +11,8 @@ import org.apache.maven.project.MavenProject;
  * @author Andrin Bertsch
  * @since 2015-05
  */
-public interface AjConfigurable {
-
+public interface AjConfigurable
+{
     String getAjMojoVersion();
 
     boolean isShowWeaveInfo();

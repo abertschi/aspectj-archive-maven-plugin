@@ -34,8 +34,8 @@ import org.twdata.maven.mojoexecutor.MojoExecutor.Element;
  * @author Andrin Bertschi
  * @since 2015-04
  */
-public class AjCompiler {
-
+public class AjCompiler
+{
     private AjConfigurable ajConfig;
     private String savedOutputDir;
 
@@ -43,13 +43,15 @@ public class AjCompiler {
     private String savedSourceDir;
     private String savedTestOutputDir;
 
-    public AjCompiler(AjConfigurable ajConfig) {
+    public AjCompiler(AjConfigurable ajConfig)
+    {
         this.ajConfig = ajConfig;
         this.buildBaseDir = ajConfig.getMavenProject().getBuild().getDirectory() + "/ajc";
         Utils.mkdirIfNotExists(buildBaseDir);
     }
 
-    public JavaArchive recompile(Module source, Module[] aspectLibraries) throws RuntimeException {
+    public JavaArchive recompile(Module source, Module[] aspectLibraries) throws RuntimeException
+    {
         backupMavenProject();
 
         final Artifact resolvedArtifact = resolveArtifact(source);
@@ -65,7 +67,8 @@ public class AjCompiler {
         changeMavenProject(compiledClassesDir);
         List<Element> aspectModules = generateAspectXmlModules(aspectLibraries);
 
-        try {
+        try
+        {
             executeMojo(
                     plugin(
                             groupId("org.codehaus.mojo"),
@@ -88,7 +91,8 @@ public class AjCompiler {
                     )
             );
 
-        } catch (MojoExecutionException e) {
+        } catch (MojoExecutionException e)
+        {
             throw new RuntimeException(e);
         }
 
@@ -107,7 +111,8 @@ public class AjCompiler {
     // maven project ----------------------------------------------------------------------||
     //-------------------------------------------------------------------------------------||
 
-    private void backupMavenProject() {
+    private void backupMavenProject()
+    {
         final Build build = ajConfig.getMavenProject().getBuild();
         savedSourceDir = build.getSourceDirectory();
         savedTestOutputDir = build.getTestOutputDirectory();
@@ -118,25 +123,29 @@ public class AjCompiler {
      * Force aspectJ compiler to recompile only weaving dependencies and not
      * source/ test-source of project.
      */
-    private void changeMavenProject(String compiledClassesDir) {
+    private void changeMavenProject(String compiledClassesDir)
+    {
         final Build build = ajConfig.getMavenProject().getBuild();
         build.setSourceDirectory("$dummy");
         build.setTestOutputDirectory("$dummy");
         build.setOutputDirectory(compiledClassesDir);
     }
 
-    private void restoreMavenProject() {
+    private void restoreMavenProject()
+    {
         final Build build = ajConfig.getMavenProject().getBuild();
         build.setSourceDirectory(savedSourceDir);
         build.setTestOutputDirectory(savedTestOutputDir);
         build.setOutputDirectory(savedOutputDir);
     }
 
-    public String getOutputDirectory() {
+    public String getOutputDirectory()
+    {
         return buildBaseDir;
     }
 
-    public void setOutputDirectory(String buildDir) {
+    public void setOutputDirectory(String buildDir)
+    {
         buildBaseDir = buildDir;
     }
 
@@ -144,19 +153,23 @@ public class AjCompiler {
     // private section --------------------------------------------------------------------||
     //-------------------------------------------------------------------------------------||
 
-    private String createArtifactName(String artifactId, String version, String type) {
+    private String createArtifactName(String artifactId, String version, String type)
+    {
         return artifactId + "-" + version + "." + type;
     }
 
-    private List<Element> generateAspectXmlModules(Module[] aspectLibraries) {
+    private List<Element> generateAspectXmlModules(Module[] aspectLibraries)
+    {
         List<Element> aspectModules = new ArrayList<Element>();
-        for (Module element : aspectLibraries) {
+        for (Module element : aspectLibraries)
+        {
             aspectModules.add(createModule(element, "aspectLibrary"));
         }
         return aspectModules;
     }
 
-    private Element createModule(Module module, String name) {
+    private Element createModule(Module module, String name)
+    {
         return MojoExecutor.element(name,
                 MojoExecutor.element("groupId", module.getGroupId()),
                 MojoExecutor.element("artifactId", module.getArtifactId()),
@@ -165,13 +178,16 @@ public class AjCompiler {
     }
 
 
-    private Artifact resolveArtifact(Module module) {
+    private Artifact resolveArtifact(Module module)
+    {
         Set<Artifact> allArtifacts = ajConfig.getMavenProject().getArtifacts();
-        for (Artifact art : allArtifacts) {
+        for (Artifact art : allArtifacts)
+        {
             if (art.getGroupId().equals(module.getGroupId())
                     && art.getArtifactId().equals(module.getArtifactId())
                     && StringUtils.defaultString(module.getClassifier()).equals(StringUtils.defaultString(art.getClassifier()))
-                    && StringUtils.defaultString(module.getType(), "jar").equals(StringUtils.defaultString(art.getType()))) {
+                    && StringUtils.defaultString(module.getType(), "jar").equals(StringUtils.defaultString(art.getType())))
+            {
                 return art;
             }
         }
