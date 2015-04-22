@@ -4,7 +4,6 @@ package ch.abertschi.aspectj;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.project.MavenProject;
-import org.codehaus.mojo.aspectj.Module;
 
 /**
  * Supported flags for the AspectJ Mojo.

@@ -18,7 +18,6 @@ import java.util.Set;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Build;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.codehaus.mojo.aspectj.Module;
 import org.codehaus.plexus.util.StringUtils;
 import org.jboss.shrinkwrap.api.ShrinkWrap;
 import org.jboss.shrinkwrap.api.exporter.ZipExporter;
@@ -53,9 +52,13 @@ public class AjCompiler {
     public JavaArchive recompile(Module source, Module[] aspectLibraries) throws RuntimeException {
         backupMavenProject();
 
-        final Artifact sourceArtifact = resolveArtifact(source);
-        final String finalName = sourceArtifact.getArtifactId() + "-" + sourceArtifact.getVersion() + "." + sourceArtifact.getType();
-        final String outputDirectory = buildBaseDir + "/" + source.getArtifactId();
+        final Artifact resolvedArtifact = resolveArtifact(source);
+        final String artifactId = source.getArtifactId();
+        final String version = source.getVersion() != null ? source.getVersion() : resolvedArtifact.getVersion();
+        final String type = source.getType() != null ? source.getType() : resolvedArtifact.getType();
+
+        final String finalName = createArtifactName(artifactId, version, type);
+        final String outputDirectory = buildBaseDir + "/" + artifactId;
         final String compiledClassesDir = outputDirectory + "/classes";
 
         Utils.mkdirIfNotExists(compiledClassesDir);
@@ -141,6 +144,10 @@ public class AjCompiler {
     // private section --------------------------------------------------------------------||
     //-------------------------------------------------------------------------------------||
 
+    private String createArtifactName(String artifactId, String version, String type) {
+        return artifactId + "-" + version + "." + type;
+    }
+
     private List<Element> generateAspectXmlModules(Module[] aspectLibraries) {
         List<Element> aspectModules = new ArrayList<Element>();
         for (Module element : aspectLibraries) {
@@ -160,7 +167,6 @@ public class AjCompiler {
 
     private Artifact resolveArtifact(Module module) {
         Set<Artifact> allArtifacts = ajConfig.getMavenProject().getArtifacts();
-
         for (Artifact art : allArtifacts) {
             if (art.getGroupId().equals(module.getGroupId())
                     && art.getArtifactId().equals(module.getArtifactId())

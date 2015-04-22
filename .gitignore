@@ -12,3 +12,25 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
+# .gitignore
+## folders
+target
+.settings
+bin
+CVS
+
+.idea/
+ 
+ 
+## files
+.classpath
+.project
+cvslog.*
+*~
+*.old
+*.exe
+*.bak
+*.BAK
+*.prefs
+.cvsignore

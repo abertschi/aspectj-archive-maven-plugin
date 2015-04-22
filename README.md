@@ -72,6 +72,9 @@ Export artifact containing the weaved dependencies.
 
 Location of the maven settings.xml
 
+## Restriction
+This Mojo requires Maven >= 3.1
+
 ## License
 This project is released under the MIT License (MIT). See LICENSE file.
 
