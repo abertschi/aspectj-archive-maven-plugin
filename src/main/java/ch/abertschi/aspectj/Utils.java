@@ -13,16 +13,16 @@ public class Utils
     {
     }
 
-    public static void mkdirIfNotExists(String directory)
+    public static void makeDirsIfNotExist(String directory)
     {
         File buildDir = new File(directory);
         if (!buildDir.exists())
         {
-            buildDir.mkdir();
+            buildDir.mkdirs();
         }
     }
 
-    public static File getFile(File base, String suffix)
+    public static File getFileOrFail(File base, String suffix)
     {
         File archiveFile = new File(base, suffix);
         if (!archiveFile.exists())

@@ -71,9 +71,13 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
 
     /**
      * Path to the full deployment that will be created.
+     *
+     * default value:
+     * "./target/${project.artifact.artifactId}-${project.artifact.version}.${extension of file in archiveImport}"
+     *
      */
-    @Parameter(defaultValue = "${project.build.directory}/${project.artifact.artifactId}-${project.artifact.version}.${project.artifact.type}")
-    private String archiveExport;
+    @Parameter()
+    private String archiveExport = null;
 
     //-------------------------------------------------------------------------------------||
     // aspectj configurations -------------------------------------------------------------||
@@ -145,15 +149,21 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
 
     public void execute() throws MojoExecutionException
     {
-        getLog().info("Executing goal archive-weave ...");
+        getLog().info("Executing mojo aspectj-archive-maven-plugin with goal archive-weave ...");
 
-        File importArchiveFile = Utils.getFile(basedir, archiveImport);
+        File importArchiveFile = Utils.getFileOrFail(basedir, archiveImport);
         String archiveName = Utils.getFilename(archiveImport);
 
         ArchiveType ext = ArchiveType.getExtensionFromFilename(archiveName);
         getLog().info("Archive type [" + ext + "] recognised");
 
-        failIfNotSupportedExtension(ext);
+        if (archiveExport == null || archiveExport.isEmpty())
+        {
+            getLog().info("No archiveExport file specified. Using defaults ...");
+            archiveExport = String.format("%s-%s.%s", mavenProject.getArtifactId(), mavenProject.getVersion(), ext.toString() );
+        }
+
+        File exportArchiveFile = new File(basedir, archiveExport);
 
         LibraryContainer<? extends Archive<?>> weaveArchive;
         getLog().info("Importing base artifact [" + archiveName + "] from [" + importArchiveFile.getAbsolutePath() + "] ...");
@@ -162,9 +172,13 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
         {
             weaveArchive = importArchive(EnterpriseArchive.class, importArchiveFile, archiveName);
         }
-        else
+        else if (ext == ArchiveType.WAR)
         {
             weaveArchive = importArchive(WebArchive.class, importArchiveFile, archiveName);
+        }
+        else
+        {
+            throw new IllegalArgumentException("Other file extensions than EAR or WAR currently not supported");
         }
 
         getLog().info("Resolving transient dependencies of aspectLibraries ...");
@@ -180,7 +194,7 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
         Archive<? extends Archive<?>> oldArchive = weaveArchive.addAsLibraries(new ArrayList<Archive<?>>());
         Archive<? extends Archive<?>> newArchive = replaceJars(oldArchive, recompiledJars);
 
-        Utils.mkdirIfNotExists(mavenProject.getBuild().getDirectory());
+        Utils.makeDirsIfNotExist(mavenProject.getBuild().getDirectory());
         //newArchive.addManifest();
         newArchive.as(ZipExporter.class).exportTo(new File(archiveExport), true);
 
@@ -253,7 +267,7 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
     private List<JavaArchive> recompileJars()
     {
         final String ajCompileDir = mavenProject.getBuild().getDirectory() + "/ajc";
-        Utils.mkdirIfNotExists(ajCompileDir);
+        Utils.makeDirsIfNotExist(ajCompileDir);
 
         AjCompiler compiler = new AjCompiler(this);
         compiler.setOutputDirectory(ajCompileDir);
@@ -299,14 +313,6 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
     //-------------------------------------------------------------------------------------||
     // helper section ---------------------------------------------------------------------||
     //-------------------------------------------------------------------------------------||
-
-    protected void failIfNotSupportedExtension(ArchiveType ext) throws MojoExecutionException
-    {
-        if (ext == ArchiveType.UNKNOWN)
-        {
-            throw new MojoExecutionException("Not recognised file extension in " + archiveImport);
-        }
-    }
 
     //-------------------------------------------------------------------------------------||
     // AjConfigurable ---------------------------------------------------------------------||
