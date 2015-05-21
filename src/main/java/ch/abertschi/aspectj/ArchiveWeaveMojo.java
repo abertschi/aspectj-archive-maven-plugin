@@ -2,11 +2,11 @@ package ch.abertschi.aspectj;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
@@ -32,8 +32,6 @@ import org.jboss.shrinkwrap.api.importer.ZipImporter;
 import org.jboss.shrinkwrap.api.spec.EnterpriseArchive;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
-import org.jboss.shrinkwrap.resolver.api.maven.Maven;
-import org.jboss.shrinkwrap.resolver.api.maven.ScopeType;
 
 /**
  * Maven Old Java Object that is capable of compile-time-weaving (CTW) complete EARs or WARs
@@ -224,17 +222,25 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
 
     protected List<JavaArchive> resolveDependencies(Module[] dependencies)
     {
-    	
     	AetherUtils resolver = new AetherUtils(repoSystem, repoSession, remoteRepos);
     			
         List<JavaArchive> jars = new ArrayList<JavaArchive>();
         for (Module module : dependencies)
         {
-            // todo: exclude artifacts already present
+        	Artifact resolveArtifact = MavenUtils.resolveArtifact(mavenProject,
+        			module.getGroupId(),
+        			module.getArtifactId(), null);
+        	
+        	if (resolveArtifact == null)
+        	{
+        		throw new RuntimeException(String.format("Given dependency %s:%s could not be "
+        				+ "found in maven project",  module.getGroupId(), module.getArtifactId()));
+        	}
+        			
             final String gav = String.format("%s:%s:%s",
             		module.getGroupId(), 
-            		module.getArtifactId(),  
-            		module.getVersion());
+            		module.getArtifactId(),
+            		resolveArtifact.getVersion());
             
             List<ArtifactResult> artifacts = resolver.resolveWithTrancivity(gav);
             List<JavaArchive> jarsForModule = AetherUtils.transform(artifacts);
@@ -243,6 +249,8 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
             {
                 getLog().info("Added required dependency [" + j + "] to archive.");
             }
+            
+            // todo: exclude artifacts already present
             jars.addAll(jarsForModule);
         }
         return jars;

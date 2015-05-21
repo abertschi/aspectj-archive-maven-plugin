@@ -180,17 +180,7 @@ public class AjCompiler
 
     private Artifact resolveArtifact(Module module)
     {
-        Set<Artifact> allArtifacts = ajConfig.getMavenProject().getArtifacts();
-        for (Artifact art : allArtifacts)
-        {
-            if (art.getGroupId().equals(module.getGroupId())
-                    && art.getArtifactId().equals(module.getArtifactId())
-                    && StringUtils.defaultString(module.getClassifier()).equals(StringUtils.defaultString(art.getClassifier()))
-                    && StringUtils.defaultString(module.getType(), "jar").equals(StringUtils.defaultString(art.getType())))
-            {
-                return art;
-            }
-        }
-        return null;
+    	return MavenUtils.resolveArtifact(ajConfig.getMavenProject(), 
+    			module.getGroupId(), module.getArtifactId(), "jar");
     }
 }
