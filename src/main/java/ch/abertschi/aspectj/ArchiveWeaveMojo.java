@@ -7,12 +7,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.maven.artifact.factory.ArtifactFactory;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.BuildPluginManager;
 import org.apache.maven.plugin.MojoExecutionException;
-import org.apache.maven.plugins.annotations.*;
+import org.apache.maven.plugins.annotations.Component;
+import org.apache.maven.plugins.annotations.LifecyclePhase;
+import org.apache.maven.plugins.annotations.Mojo;
+import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
+import org.eclipse.aether.RepositorySystem;
+import org.eclipse.aether.RepositorySystemSession;
+import org.eclipse.aether.repository.RemoteRepository;
+import org.eclipse.aether.resolution.ArtifactResult;
 import org.jboss.shrinkwrap.api.Archive;
 import org.jboss.shrinkwrap.api.ArchivePath;
 import org.jboss.shrinkwrap.api.Node;
@@ -24,7 +33,6 @@ import org.jboss.shrinkwrap.api.spec.EnterpriseArchive;
 import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.jboss.shrinkwrap.api.spec.WebArchive;
 import org.jboss.shrinkwrap.resolver.api.maven.Maven;
-import org.jboss.shrinkwrap.resolver.api.maven.PomEquippedResolveStage;
 import org.jboss.shrinkwrap.resolver.api.maven.ScopeType;
 
 /**
@@ -34,7 +42,9 @@ import org.jboss.shrinkwrap.resolver.api.maven.ScopeType;
  * @author Andrin Bertsch
  * @since 2015-05
  */
-@Mojo(name = "archive-weave", requiresDependencyResolution = ResolutionScope.TEST, defaultPhase = LifecyclePhase.PACKAGE)
+
+@Mojo(name = "archive-weave", requiresDependencyResolution = 
+	  ResolutionScope.TEST, defaultPhase = LifecyclePhase.PACKAGE)
 public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
 {
 
@@ -46,6 +56,18 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
 
     @Component
     private BuildPluginManager pluginManager;
+
+    @Component
+    private ArtifactFactory artifactFactory;
+    
+    @Component
+    private RepositorySystem repoSystem;
+
+	@Parameter(defaultValue = "${repositorySystemSession}")
+    private RepositorySystemSession repoSession;
+
+	@Parameter(defaultValue = "${project.remoteProjectRepositories}")
+    private List<RemoteRepository> remoteRepos;
 
     //-------------------------------------------------------------------------------------||
     // mojo configuration -----------------------------------------------------------------||
@@ -74,7 +96,6 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
      *
      * default value:
      * "./target/${project.artifact.artifactId}-${project.artifact.version}.${extension of file in archiveImport}"
-     *
      */
     @Parameter()
     private String archiveExport = null;
@@ -163,8 +184,6 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
             archiveExport = String.format("%s-%s.%s", mavenProject.getArtifactId(), mavenProject.getVersion(), ext.toString() );
         }
 
-        File exportArchiveFile = new File(basedir, archiveExport);
-
         LibraryContainer<? extends Archive<?>> weaveArchive;
         getLog().info("Importing base artifact [" + archiveName + "] from [" + importArchiveFile.getAbsolutePath() + "] ...");
 
@@ -185,9 +204,6 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
         List<JavaArchive> libs = resolveDependencies(aspectLibraries);
         weaveArchive.addAsLibraries(libs);
 
-        //List<JavaArchive> libs = getModuleDependencies();
-        //weaveArchive.addAsLibraries(libs);
-
         getLog().info("Compile-time-weaving weaveDependencies ...");
         List<JavaArchive> recompiledJars = recompileJars();
 
@@ -195,8 +211,9 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
         Archive<? extends Archive<?>> newArchive = replaceJars(oldArchive, recompiledJars);
 
         Utils.makeDirsIfNotExist(mavenProject.getBuild().getDirectory());
-        //newArchive.addManifest();
-        newArchive.as(ZipExporter.class).exportTo(new File(archiveExport), true);
+        
+        File exportArchiveFile = new File(basedir, archiveExport);
+        newArchive.as(ZipExporter.class).exportTo(exportArchiveFile, true);
 
         getLog().info("Compile-time-weaved artifact created [" + archiveExport + "].");
     }
@@ -207,23 +224,26 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
 
     protected List<JavaArchive> resolveDependencies(Module[] dependencies)
     {
-        PomEquippedResolveStage resolver = Maven.configureResolver()
-                .workOffline()
-                .fromFile(mavenConf)
-                .loadPomFromFile("pom.xml")
-                .importCompileAndRuntimeDependencies();
-
+    	
+    	AetherUtils resolver = new AetherUtils(repoSystem, repoSession, remoteRepos);
+    			
         List<JavaArchive> jars = new ArrayList<JavaArchive>();
         for (Module module : dependencies)
         {
-            // todo: only add dependency if not already exists?
-            final String identifier = module.getGroupId() + ":" + module.getArtifactId();
-            List<JavaArchive> jarsForIdentifer = Arrays.asList(resolver.resolve(identifier).withTransitivity().as(JavaArchive.class));
-            for (JavaArchive j : jarsForIdentifer)
+            // todo: exclude artifacts already present
+            final String gav = String.format("%s:%s:%s",
+            		module.getGroupId(), 
+            		module.getArtifactId(),  
+            		module.getVersion());
+            
+            List<ArtifactResult> artifacts = resolver.resolveWithTrancivity(gav);
+            List<JavaArchive> jarsForModule = AetherUtils.transform(artifacts);
+            
+            for (JavaArchive j : jarsForModule)
             {
                 getLog().info("Added required dependency [" + j + "] to archive.");
             }
-            jars.addAll(jarsForIdentifer);
+            jars.addAll(jarsForModule);
         }
         return jars;
     }
@@ -234,34 +254,6 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
                 .create(ZipImporter.class, name)
                 .importFrom(location)
                 .as(type);
-    }
-
-    private List<JavaArchive> getModuleDependencies()
-    {
-        List<JavaArchive> jars = new ArrayList<JavaArchive>();
-        try
-        {
-            /*
-             * To simplify dependency management, we import
-			 * compile time dependencies of the current maven module.
-			 * That makes dependency management much simpler.
-			 * Further, there seems to be a big with Shrinkwrap and Maven 3.0.x.
-			 */
-            jars = Arrays.asList(Maven
-                    .configureResolver()
-                    .workOffline()
-                    .fromFile(mavenConf)
-                    .loadPomFromFile("pom.xml")
-                    .importDependencies(ScopeType.COMPILE)
-                    .resolve()
-                    .withTransitivity()
-                    .as(JavaArchive.class));
-        }
-        catch (IllegalArgumentException e)
-        {
-            getLog().info("No further dependencies added to archive");
-        }
-        return jars;
     }
 
     private List<JavaArchive> recompileJars()
@@ -276,7 +268,6 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
         for (Module toWeave : weaveDependencies)
         {
             getLog().info("Recompiling library [" + toWeave.getGroupId() + ":" + toWeave.getArtifactId());
-
             recompiledJars.add(compiler.recompile(toWeave, aspectLibraries));
         }
         return recompiledJars;
@@ -317,7 +308,7 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
     //-------------------------------------------------------------------------------------||
     // AjConfigurable ---------------------------------------------------------------------||
     //-------------------------------------------------------------------------------------||
-
+    
     @Override
     public String getAjMojoVersion()
     {
@@ -360,7 +351,6 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
         return Xlint;
     }
 
-    @Override
     public boolean isVerbose()
     {
         return verbose;
