@@ -3,13 +3,16 @@ package ch.abertschi.aspectj;
 import java.io.File;
 
 /**
+ * File utils
+ * 
  * @author Andrin Bertsch
  * @since 2015-05
+ * 
  */
-public class Utils
+public class FileUtils
 {
 
-    private Utils()
+    private FileUtils()
     {
     }
 
@@ -25,9 +28,14 @@ public class Utils
     public static File getFileOrFail(File base, String suffix)
     {
         File archiveFile = new File(base, suffix);
+        return getFileOrFail(archiveFile);
+    }
+    
+    public static File getFileOrFail(File archiveFile)
+    {
         if (!archiveFile.exists())
         {
-            throw new RuntimeException("Specified deployable doesnt exist: " + base.getAbsolutePath() + " name: " + suffix);
+            throw new RuntimeException("File does not exist: " + archiveFile.getAbsolutePath());
         }
         return archiveFile;
     }

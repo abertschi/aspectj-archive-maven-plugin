@@ -47,7 +47,7 @@ public class AjCompiler
     {
         this.ajConfig = ajConfig;
         this.buildBaseDir = ajConfig.getMavenProject().getBuild().getDirectory() + "/ajc";
-        Utils.makeDirsIfNotExist(buildBaseDir);
+        FileUtils.makeDirsIfNotExist(buildBaseDir);
     }
 
     public JavaArchive recompile(Module source, Module[] aspectLibraries) throws RuntimeException
@@ -63,7 +63,7 @@ public class AjCompiler
         final String outputDirectory = buildBaseDir + "/" + artifactId;
         final String compiledClassesDir = outputDirectory + "/classes";
 
-        Utils.makeDirsIfNotExist(compiledClassesDir);
+        FileUtils.makeDirsIfNotExist(compiledClassesDir);
         changeMavenProject(compiledClassesDir);
         List<Element> aspectModules = generateAspectXmlModules(aspectLibraries);
 
