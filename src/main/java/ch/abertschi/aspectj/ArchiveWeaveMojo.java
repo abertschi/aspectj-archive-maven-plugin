@@ -90,10 +90,11 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
     protected String archiveImport;
 
     /**
-     * Path to the full deployment that will be created.
+     * Absolute Path to the artifact that will be created as a result of this mojo.
      *
      * default value:
-     * "./target/${project.artifact.artifactId}-${project.artifact.version}.${extension of file in archiveImport}"
+     * "${project.build.directory}/target/${project.artifact.artifactId}-\
+     *  ${project.artifact.version}.${extension of file in archiveImport}"
      */
     @Parameter()
     private String archiveExport = null;
@@ -170,20 +171,15 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
     {
         getLog().info("Executing mojo aspectj-archive-maven-plugin with goal archive-weave ...");
 
-        File importArchiveFile = Utils.getFileOrFail(basedir, archiveImport);
-        String archiveName = Utils.getFilename(archiveImport);
+        File importArchiveFile = FileUtils.getFileOrFail(new File(archiveImport));
+        String archiveName = FileUtils.getFilename(archiveImport);
 
         ArchiveType ext = ArchiveType.getExtensionFromFilename(archiveName);
         getLog().info("Archive type [" + ext + "] recognised");
 
-        if (archiveExport == null || archiveExport.isEmpty())
-        {
-            getLog().info("No archiveExport file specified. Using defaults ...");
-            archiveExport = String.format("%s-%s.%s", mavenProject.getArtifactId(), mavenProject.getVersion(), ext.toString() );
-        }
-
         LibraryContainer<? extends Archive<?>> weaveArchive;
-        getLog().info("Importing base artifact [" + archiveName + "] from [" + importArchiveFile.getAbsolutePath() + "] ...");
+        getLog().info("Importing base artifact [" 
+        		+ archiveName + "] from [" + importArchiveFile.getAbsolutePath() + "] ...");
 
         if (ext == ArchiveType.EAR)
         {
@@ -208,13 +204,27 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
         Archive<? extends Archive<?>> oldArchive = weaveArchive.addAsLibraries(new ArrayList<Archive<?>>());
         Archive<? extends Archive<?>> newArchive = replaceJars(oldArchive, recompiledJars);
 
-        Utils.makeDirsIfNotExist(mavenProject.getBuild().getDirectory());
+        FileUtils.makeDirsIfNotExist(mavenProject.getBuild().getDirectory());
         
-        File exportArchiveFile = new File(basedir, archiveExport);
+        File exportArchiveFile = createExportFile(archiveExport, ext);
+        
         newArchive.as(ZipExporter.class).exportTo(exportArchiveFile, true);
 
         getLog().info("Compile-time-weaved artifact created [" + archiveExport + "].");
     }
+
+	private File createExportFile(String archiveExport, ArchiveType ext)
+	{
+		if (archiveExport == null || archiveExport.isEmpty())
+        {
+            getLog().info("No archiveExport file specified. Using defaults ...");
+            archiveExport = String.format("%s-%s.%s", 
+            		mavenProject.getArtifactId(), 
+            		mavenProject.getVersion(), 
+            		ext.toString());
+        }
+		return new File(archiveExport);
+	}
 
     //-------------------------------------------------------------------------------------||
     // archive operation section ----------------------------------------------------------||
@@ -267,7 +277,7 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
     private List<JavaArchive> recompileJars()
     {
         final String ajCompileDir = mavenProject.getBuild().getDirectory() + "/ajc";
-        Utils.makeDirsIfNotExist(ajCompileDir);
+        FileUtils.makeDirsIfNotExist(ajCompileDir);
 
         AjCompiler compiler = new AjCompiler(this);
         compiler.setOutputDirectory(ajCompileDir);
@@ -288,7 +298,7 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
 
         for (Entry<ArchivePath, Node> entry : archiveContent.entrySet())
         {
-            String artifactName = Utils.getFilename(entry.getKey().get());
+            String artifactName = FileUtils.getFilename(entry.getKey().get());
             if (ArchiveType.JAR == ArchiveType.getExtensionFromFilename(artifactName))
             {
                 getLog().debug("Adding jar [" + artifactName + "]");
@@ -300,7 +310,7 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
                         getLog().info("Replacing jar [" + entry.getKey().get() + "] with compile-time-weaved equivalent.");
 
                         newArchive.delete(entry.getKey());
-                        String withoutFilename = Utils.getPathWithoutFilename(entry.getKey().get());
+                        String withoutFilename = FileUtils.getPathWithoutFilename(entry.getKey().get());
                         newArchive.add(recompiled, withoutFilename, ZipExporter.class);
                     }
                 }
