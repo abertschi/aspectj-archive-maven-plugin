@@ -16,7 +16,19 @@
          <aetherVersion>0.9.0.M4</aetherVersion>
          <mavenVersion>3.3.1</mavenVersion>
     </properties>
-
+    
+    <description>Weave complete EAR or WAR with an aspectJ compiler</description>
+    
+    <developers>
+    	<developer>
+    		<name>Andrin Bertschi</name>
+    		<email>andrin.bertschi@gmail.com</email>
+    	</developer>
+    </developers>
+    
+    <distributionManagement>
+    	<downloadUrl>http://www.github.com/abertschi/aspectj-archive-maven-plugin</downloadUrl>
+    </distributionManagement>
 
     <build>
         <plugins>
