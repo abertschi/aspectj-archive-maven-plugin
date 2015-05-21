@@ -1,7 +1,5 @@
 package ch.abertschi.aspectj;
 
-import com.sun.javaws.exceptions.InvalidArgumentException;
-
 /**
  * @author Andrin Bertsch
  * @since 2015-05
@@ -10,8 +8,8 @@ public enum ArchiveType
 {
     EAR,
     WAR,
-    JAR;
-
+    JAR,
+    UNKNOWN;
 
     /**
      * Get Instance by file name.
@@ -21,7 +19,7 @@ public enum ArchiveType
      */
     public static ArchiveType getExtensionFromFilename(String name)
     {
-        ArchiveType ext;
+        ArchiveType ext = UNKNOWN;
         if (name.toLowerCase().endsWith(".ear"))
         {
             ext = ArchiveType.EAR;
@@ -34,16 +32,12 @@ public enum ArchiveType
         {
             ext = ArchiveType.JAR;
         }
-        else
-        {
-            throw new IllegalArgumentException(String.format("File with unsupported file extension %s. Valid are EAR, WAR and JAR.", name));
-        }
         return ext;
     }
 
     public static ArchiveType getExtensionFromString(String name)
     {
-        ArchiveType ext;
+        ArchiveType ext = UNKNOWN;
         if (name.toLowerCase().equals("ear"))
         {
             ext = ArchiveType.EAR;
@@ -56,11 +50,7 @@ public enum ArchiveType
         {
             ext = ArchiveType.JAR;
         }
-        else
-        {
-            throw new IllegalArgumentException(String.format("Unsupported file extension %s. Valid are EAR, WAR and JAR.", name));
-        }
-
+        
         return ext;
     }
 
