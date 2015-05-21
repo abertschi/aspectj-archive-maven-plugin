@@ -68,10 +68,6 @@ Source artifact to import, type EAR or WAR.
 
 Export artifact containing the weaved dependencies.
 
-#### mavenConf
-
-Location of the maven settings.xml
-
 ## Restriction
 This Mojo requires Maven >= 3.1
 

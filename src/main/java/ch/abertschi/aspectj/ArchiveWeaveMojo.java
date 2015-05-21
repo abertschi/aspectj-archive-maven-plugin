@@ -78,12 +78,6 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
     private File outputDirectory;
 
     /**
-     * Maven settings.xml required for dependency resolution.
-     */
-    @Parameter(required = true, defaultValue = "${env.M2_HOME}/conf/settings.xml")
-    protected String mavenConf;
-
-    /**
      * Archive to import and enrich for full deployment. (relative path from current dir).
      */
     @Parameter(required = true)
