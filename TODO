@@ -1,6 +1,5 @@
 TODOs
 =====
 
- - add aspectLibraries and their dependencies to the final artifact
-    - I.)  use schema defined by aj mojo without version number of artifact (thus, add it as dependency to the project)
-    - II.) define version number for each aspectLibrary and resolve it programmatically.
+1. Support WAR artifacts (either inside an EAR or standalone)
+ 1.1 Weave code in WEB-INF/classes in a WAR as well code in libraries inside a WAR

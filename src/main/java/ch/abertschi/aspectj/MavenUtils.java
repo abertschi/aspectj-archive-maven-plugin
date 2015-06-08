@@ -28,7 +28,6 @@ public class MavenUtils
 		Set<Artifact> allArtifacts = mavenProject.getArtifacts();
 		for (Artifact art : allArtifacts)
 		{
-			System.out.println(art);
 			if (art.getGroupId().equals(groupId) && art.getArtifactId().equals(artifactId)
 					&& StringUtils.defaultString(null).equals(StringUtils.defaultString(art.getClassifier()))
 					&& StringUtils.defaultString(type, "jar").equals(StringUtils.defaultString(art.getType())))

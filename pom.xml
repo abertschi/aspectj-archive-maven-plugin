@@ -6,7 +6,7 @@
 
     <groupId>ch.abertschi</groupId>
     <artifactId>aspectj-archive-maven-plugin</artifactId>
-    <version>0.0.3-SNAPSHOT</version>
+    <version>0.0.1-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <properties>
@@ -26,6 +26,7 @@
     	</developer>
     </developers>
     
+   
 
     <build>
         <plugins>
