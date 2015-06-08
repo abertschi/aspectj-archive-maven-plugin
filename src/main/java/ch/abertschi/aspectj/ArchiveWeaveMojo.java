@@ -181,6 +181,7 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
         }
         else if (ext == ArchiveType.WAR)
         {
+        	getLog().warn("WAR artifacts may not yet be fully supported");
             weaveArchive = importArchive(WebArchive.class, importArchiveFile, archiveName);
         }
         else
@@ -287,20 +288,29 @@ public class ArchiveWeaveMojo extends AbstractMojo implements AjConfigurable
 
     private <T extends Archive<T>> Archive<T> replaceJars(Archive<T> archive, List<JavaArchive> newJars)
     {
+    	getLog().info("Jars to replace:");
+    	for (JavaArchive javaArchive : newJars)
+		{
+    		getLog().info(javaArchive.toString());
+		}
+    	
         Archive<T> newArchive = archive.shallowCopy();
         Map<ArchivePath, Node> archiveContent = archive.getContent();
 
         for (Entry<ArchivePath, Node> entry : archiveContent.entrySet())
         {
             String artifactName = FileUtils.getFilename(entry.getKey().get());
+            getLog().debug("processing  [" + artifactName + "]");
             if (ArchiveType.JAR == ArchiveType.getExtensionFromFilename(artifactName))
             {
-                getLog().debug("Adding jar [" + artifactName + "]");
+                getLog().info("Adding jar [" + artifactName + "]");
 
                 for (JavaArchive recompiled : newJars)
                 {
+                	getLog().debug("Comparing  [" + artifactName + "] = [" + recompiled.getName() + "]");
                     if (artifactName.equals(recompiled.getName()))
                     {
+                    	getLog().debug("A match!");
                         getLog().info("Replacing jar [" + entry.getKey().get() + "] with compile-time-weaved equivalent.");
 
                         newArchive.delete(entry.getKey());

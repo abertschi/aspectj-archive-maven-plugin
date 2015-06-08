@@ -26,6 +26,8 @@ import org.jboss.shrinkwrap.api.spec.JavaArchive;
 import org.twdata.maven.mojoexecutor.MojoExecutor;
 import org.twdata.maven.mojoexecutor.MojoExecutor.Element;
 
+import sun.security.util.Length;
+
 
 /**
  * A wrapper around the {@code org.codehaus.mojo:aspectj-maven-plugin}.
@@ -57,7 +59,11 @@ public class AjCompiler
         final Artifact resolvedArtifact = resolveArtifact(source);
         final String artifactId = source.getArtifactId();
         final String version = source.getVersion() != null ? source.getVersion() : resolvedArtifact.getVersion();
-        final String type = source.getType() != null ? source.getType() : resolvedArtifact.getType();
+        
+        String ext = getFileExtension(resolvedArtifact);
+        final String type = ext != null ? ext 
+        		: source.getType() != null ? source.getType() 
+        		: resolvedArtifact.getType();
 
         final String finalName = createArtifactName(artifactId, version, type);
         final String outputDirectory = buildBaseDir + "/" + artifactId;
@@ -93,7 +99,7 @@ public class AjCompiler
 
         } catch (MojoExecutionException e)
         {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Can not recompile module " + source.toString(), e);
         }
 
         JavaArchive jar = ShrinkWrap.create(JavaArchive.class, finalName)
@@ -106,6 +112,16 @@ public class AjCompiler
 
         return jar;
     }
+
+	private String getFileExtension(final Artifact resolvedArtifact)
+	{
+		String result = null;
+		String split[] = resolvedArtifact.getFile().getAbsolutePath().split("\\.");
+        if (split.length > 1) {
+        	result = split[split.length -1];
+        }
+        return result;
+	}
 
     //-------------------------------------------------------------------------------------||
     // maven project ----------------------------------------------------------------------||
@@ -181,6 +197,6 @@ public class AjCompiler
     private Artifact resolveArtifact(Module module)
     {
     	return MavenUtils.resolveArtifact(ajConfig.getMavenProject(), 
-    			module.getGroupId(), module.getArtifactId(), "jar");
+    			module.getGroupId(), module.getArtifactId(), module.getType());
     }
 }

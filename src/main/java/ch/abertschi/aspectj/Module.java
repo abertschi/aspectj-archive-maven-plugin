@@ -8,7 +8,7 @@ public class Module
 
     private String classifier;
 
-    private String type;
+    private String type = "jar";
 
     private String version;
 

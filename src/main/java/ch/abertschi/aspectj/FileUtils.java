@@ -67,4 +67,20 @@ public class FileUtils
         }
         return result;
     }
+    
+    public static String getNameWithoutExtension(String name)
+    {
+        String result;
+        String[] split = name.split("\\.");
+        if (split.length > 1)
+        {
+            result = split[split.length - 1];
+            result = name.substring(name.length() - result.length());
+        }
+        else
+        {
+            result = split[0];
+        }
+        return result;
+    }
 }
