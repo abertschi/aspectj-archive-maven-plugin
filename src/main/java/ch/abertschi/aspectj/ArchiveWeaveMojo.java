@@ -37,6 +37,17 @@ import org.jboss.shrinkwrap.api.spec.WebArchive;
  * Maven Old Java Object that is capable of compile-time-weaving (CTW) complete EARs or WARs
  * using {@code aspecj-maven-plugin} by {@code org.codehaus.mojo} under the hooks.
  *
+ *<pre>
+ *
+ * TODO: 
+ * -----------
+ *  [ ] - Support WAR archive
+ *     [ ] - Scan libraries in configured lib directory in WAR
+ *     [ ] - Scan code under WEB-INF/classes
+ *  [ ] - Support WAR in EAR archives
+ *  
+ *</pre>
+ *
  * @author Andrin Bertsch
  * @since 2015-05
  */
